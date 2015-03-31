@@ -101,7 +101,6 @@ class Config(object):
     TRAIN_SENTENCES_PREFIX = r'train'
     CONFIG_PREFIX = r'config'
 
-    # The number of training examples after which some special events get triggered during training. Like logging, doing backups etc. Measured in number of processed examples.
     INTERRUPT_VERYFREQUENT = 1000
     INTERRUPT_FREQUENT = 100000
     INTERRUPT_MEDIUM =  1000000
