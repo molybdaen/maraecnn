@@ -58,8 +58,7 @@ def buildDictionary(w2v_model):
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
-dataId = DataEnum.amazon
-
+dataId = DataEnum.wikipedia
 langCorp = LanguageCorpus(dataId)
 
 model = gensim.models.Word2Vec(sentences=langCorp, sg=1, hs=0, negative=20, min_count=50, size=100, workers=4, window=9) # an empty model, no training

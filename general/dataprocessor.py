@@ -114,8 +114,7 @@ class WikipediaCorpusProcessor(IProcessor):
         for line in h_raw_data:
             if tmpTokCount > tokToRead:
                 break
-            if self.exampleCount % 100000 == 0:
-                print "Processed %d lines (%d tokens) in file." % (self.exampleCount, tmpTokCount)
+            if self.exampleCount % 100000 == 0: print "Processed %d lines (%d tokens) in file." % (self.exampleCount, tmpTokCount)
             tokenized = []
             for token in line.split():
                 ntoks = self.tokenizer.normalize(token)

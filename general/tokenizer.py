@@ -4,6 +4,7 @@
 __author__ = 'Johannes'
 
 import re
+from util.datacleaning import killgremlins
 
 
 class TokenType:
@@ -210,41 +211,6 @@ words = r"""
       [\.,:;\?\!\$]
     )"""
 
-# The components of the tokenizer:
-regex_strings = (
-    newline,
-    # Emoticons
-    emoticon_happy,
-    emoticon_sad,
-    emoticon_cheeky,
-    emoticon_shock,
-    emoticon_undecided,
-    emoticon_other,
-    emoticon_asterisk,
-    # Twitter
-    twitter_hashtag,
-    twitter_uname,
-    # Numbers
-    number,
-    # Enforcement and Repetition
-    enforce_question,
-    enforce_exclamation,
-    enforce_confusion,
-    enforce_dots,
-    # Webadress
-    web_adress,
-
-    # Words
-    words
-)
-
-######################################################################
-# This is the core tokenizing regex:
-
-word_re = re.compile(r"""(%s)""" % "|".join(regex_strings), re.VERBOSE | re.I | re.UNICODE)
-
-######################################################################
-
 
 class ITokenizer(object):
     """ Tokenizer Interface """
@@ -260,13 +226,41 @@ class Tokenizer(ITokenizer):
     def __init__(self, preserve_case=True):
         super(Tokenizer, self).__init__()
         self.preserve_case = preserve_case
+        # The components of the tokenizer
+        self.regex_strings = (
+            newline,
+            # Emoticons
+            emoticon_happy,
+            emoticon_sad,
+            emoticon_cheeky,
+            emoticon_shock,
+            emoticon_undecided,
+            emoticon_other,
+            emoticon_asterisk,
+            # Twitter
+            twitter_hashtag,
+            twitter_uname,
+            # Numbers
+            number,
+            # Enforcement and Repetition
+            enforce_question,
+            enforce_exclamation,
+            enforce_confusion,
+            enforce_dots,
+            # Webadress
+            web_adress,
+
+            # Words
+            words
+        )
+        self.word_re = re.compile(r"""(%s)""" % "|".join(self.regex_strings), re.VERBOSE | re.I | re.UNICODE)
 
     def normalize(self, s):
         if not self.preserve_case:
             s = s.lower()
         words = []
 
-        for tok in word_re.finditer(s):
+        for tok in self.word_re.finditer(s):
             tokType = tok.groupdict()
             for key in tokType:
                 if tokType[key] is not None:
@@ -278,24 +272,83 @@ class Tokenizer(ITokenizer):
         return words
 
 
+class WikiExtractorTokenizer(ITokenizer):
+    def __init__(self, preserve_case=True):
+        super(WikiExtractorTokenizer, self).__init__()
+        self.preserve_case = preserve_case
+        # The components of the tokenizer
+        self.regex_strings = (
+            #newline,
+            # Emoticons
+            #emoticon_happy,
+            #emoticon_sad,
+            #emoticon_cheeky,
+            #emoticon_shock,
+            #emoticon_undecided,
+            #emoticon_other,
+            #emoticon_asterisk,
+            # Twitter
+            #twitter_hashtag,
+            #twitter_uname,
+            # Numbers
+            number,
+            # Enforcement and Repetition
+            enforce_question,
+            enforce_exclamation,
+            enforce_confusion,
+            enforce_dots,
+            # Webadress
+            web_adress,
+
+            # Words
+            words
+        )
+        self.word_re = re.compile(r"""(%s)""" % "|".join(self.regex_strings), re.VERBOSE | re.I | re.UNICODE)
+
+    def normalize(self, s):
+
+        if not self.preserve_case:
+            s = s.lower()
+
+        words = []
+
+        if not s.startswith("<"):
+            for tok in self.word_re.finditer(s):
+                tokType = tok.groupdict()
+                for key in tokType:
+                    if tokType[key] is not None:
+                        if key == "word":
+                            words.append(tokType[key])
+                        else:
+                            words.append('*'+key+'*')
+
+        return words
+
+
+
 ###############################################################################
 
 if __name__ == '__main__':
 
-    tok = Tokenizer(preserve_case=False)
-    list = ["!!!", "????", "....", "!?!??!", ":-)", ":-(", ":)", ":(", "*whatever*", "Oo", "^^", "#machinelearning", "@root"]
-    list2 = ["i'm", "you're", "she's", "i've", "we'd", "don't", "Ben's house", "non-linear", "in     di   vid ual"]
-    sample = "Anyway, why didn't they remove that!?!??:/"
+    # tok = Tokenizer(preserve_case=False)
+    # list = ["!!!", "????", "....", "!?!??!", ":-)", ":-(", ":)", ":(", "*whatever*", "Oo", "^^", "#machinelearning", "@root"]
+    # list2 = ["i'm", "you're", "she's", "i've", "we'd", "don't", "Ben's house", "non-linear", "in     di   vid ual"]
+    # sample = "Anyway, why didn't they remove that!?!??:/"
+    #
+    # for (u, n) in zip(list2, [tok.normalize(s) for s in list2]):
+    #     print "\\texttt{%s} & \\texttt{%s}" % (u, " ".join(n))
+    # for (u, n) in zip(list, [tok.normalize(s) for s in list]):
+    #     print "\\texttt{%s} & \\texttt{%s}" % (u, " ".join(n))
+    #
+    # print "\\texttt{%s} & \\texttt{%s}" % (sample, " ".join(tok.normalize(sample)))
+    #
+    # for s in list2:
+    #     print tok.normalize(s)
+    # print tok.normalize(sample)
+    # for s in list:
+    #     print tok.normalize(s)
 
-    for (u, n) in zip(list2, [tok.normalize(s) for s in list2]):
-        print "\\texttt{%s} & \\texttt{%s}" % (u, " ".join(n))
-    for (u, n) in zip(list, [tok.normalize(s) for s in list]):
-        print "\\texttt{%s} & \\texttt{%s}" % (u, " ".join(n))
+    tok = WikiExtractorTokenizer(preserve_case=True)
 
-    print "\\texttt{%s} & \\texttt{%s}" % (sample, " ".join(tok.normalize(sample)))
-
-    for s in list2:
-        print tok.normalize(s)
-    print tok.normalize(sample)
-    for s in list:
-        print tok.normalize(s)
+    for l in open("../util/extracted/AA/wiki_00", "r"):
+        print tok.normalize(l)

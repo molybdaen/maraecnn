@@ -106,7 +106,7 @@ class Config(object):
     INTERRUPT_MEDIUM =  1000000
     INTERRUPT_RARE =   10000000
 
-    ROOT_DIR = r'C:\MA'
+    ROOT_DIR = r'../../data'
 
     RUN_NAME = r'amazon'
 

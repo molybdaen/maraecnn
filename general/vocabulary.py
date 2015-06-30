@@ -7,7 +7,6 @@ import theano
 
 from general.config import Config
 from util import exceptions as e
-from util.utils import normalizeEmbeddings_scaleNormal, normalizeEmbeddingsL2, normalizeEmbeddings
 
 
 _unknown_key = "*UNKNOWN*"
