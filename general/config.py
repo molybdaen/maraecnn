@@ -94,6 +94,7 @@ class Config(object):
 
     #
     DATA_FILE_EXT = ".gz"
+    DATA_FILE_EXT_BZ2 = ".bz2"
     SNAPSHOT_FILE_EXT = ".pkl"
     CONFIG_FILE_EXT = ".pkl"
     INOUT_FILE_EXT = '.gz'

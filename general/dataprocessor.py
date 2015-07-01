@@ -5,6 +5,7 @@ __author__ = 'Johannes'
 
 import os
 import gzip
+import bz2
 import sys
 from os.path import join
 import json
@@ -120,6 +121,70 @@ class WikipediaCorpusProcessor(IProcessor):
                 ntoks = self.tokenizer.normalize(token)
                 tokenized += ntoks
             tmpTokCount += len(tokenized)
+            self.exampleCount += 1
+            text = " ".join(tokenized)
+            h_train_data.write(text)#json.dumps([text, label]))
+            h_train_data.write('\n')
+        h_raw_data.close()
+        self.tokenCount += tmpTokCount
+        remainingToks = tokToRead - tmpTokCount
+        if remainingToks > 0:
+            return remainingToks
+        else:
+            return 0
+
+
+class WikiExtractorCorpusProcessor(IProcessor):
+
+    PROC_CONF = DataEnum.wikipedia
+
+    def __init__(self, tokenizer, maxTokens):
+        super(WikiExtractorCorpusProcessor, self).__init__(tokenizer)
+
+        self.maxTokens = maxTokens
+        self.fileCount = long(0)
+        self.exampleCount = long(0)
+        self.tokenCount = long(0)
+        self.pathToRaw = join(WikiExtractorCorpusProcessor.PROC_CONF.getPath(), Config.DIRNAME_DATA_RAW)
+        self.pathToTrain = join(WikiExtractorCorpusProcessor.PROC_CONF.getPath(), Config.DIRNAME_DATA_TRAIN)
+        # self.vocab = {}
+
+    def build(self):
+        for f in os.listdir(self.pathToRaw):
+            if f.endswith(Config.DATA_FILE_EXT_BZ2):
+                self.fileCount += 1
+
+        trainDataFilename = join(self.pathToTrain, "%s_all_data_%d.txt%s" % (Config.TRAIN_SENTENCES_PREFIX, self.maxTokens, Config.DATA_FILE_EXT_BZ2))
+        if not os.path.exists(self.pathToTrain):
+            os.makedirs(self.pathToTrain)
+        h_train_data = gzip.open(trainDataFilename, mode="w")
+
+        remainingToks = 0
+        avgTokens = self.maxTokens / self.fileCount
+        for f in os.listdir(self.pathToRaw):
+            if f.endswith(Config.DATA_FILE_EXT_BZ2):
+                tokensToRead = avgTokens + remainingToks
+                print "#Tokens to read from file %s: %d" % (str(f), tokensToRead)
+                rawDataFile = join(self.pathToRaw, str(f))
+                remainingToks = self._read(rawDataFile, h_train_data, tokensToRead)
+                print "Total #examples: %d" % self.exampleCount
+                print "Total #tokens: %d" % self.tokenCount
+        h_train_data.close()
+
+    def _read(self, inputRawFile, h_train_data, tokToRead):
+        h_raw_data = bz2.BZ2File(inputRawFile, mode="r")
+        tmpTokCount = 0
+        text = ""
+        label = 0
+        for line in h_raw_data:
+            if tmpTokCount > tokToRead:
+                break
+            if self.exampleCount % 100000 == 0: print "Processed %d lines (%d tokens) in file." % (self.exampleCount, tmpTokCount)
+            tokenized = []
+            for token in line.split():
+                ntoks = self.tokenizer.normalize(token)
+                tokenized += ntoks
+                tmpTokCount += len(ntoks)
             self.exampleCount += 1
             text = " ".join(tokenized)
             h_train_data.write(text)#json.dumps([text, label]))
@@ -447,8 +512,12 @@ class PreProcessor(object):
 # In case you need to read a string like this manually from a file, you have to call pythonUniCodeString = str_with_tricky_json_coding.decode("unicode-escape") to get rid of the \u00e9 notation and back to the \xe9.
 
 if __name__ == "__main__":
-    pp = PreProcessor(preprocessor=DataEnum.wikipedia, tokenizer=TokenizerEnum.sentiment)
-    pp.run()
+    # pp = PreProcessor(preprocessor=DataEnum.wikipedia, tokenizer=TokenizerEnum.sentiment)
+    # pp.run()
+
+    from general.tokenizer import WikiExtractorTokenizer
+    wep = WikiExtractorCorpusProcessor(WikiExtractorTokenizer(preserve_case=True))
+    wep.build()
 
 
 

@@ -6,7 +6,7 @@ import cPickle
 from os import path
 from gensim import matutils
 import mwparserfromhell
-
+import bz2
 
 def getEmbeddingsAndVocab(w2vModelFilename, rebuild=False):
     if path.exists(w2vModelFilename):
@@ -30,8 +30,16 @@ if __name__ == "__main__":
     # print len(v)
     # print np.dot(matutils.unitvec(m[v["World_War_I"].index]), matutils.unitvec(m[v["World_War_II"].index]))
 
-    text = "I has a template! {{foo|bar|baz|eggs=spam}} [[World_War_I]] See it?"
-    text2 = r"<page> <title>AdA</title> <id>11</id> <revision> <id>15898946</id> <timestamp>2002-09-22T16:02:58Z</timestamp> <contributor> <username>Andre Engels</username> <id>300</id> </contributor> <minor /> <text xml:space='preserve'>#REDIRECT [[Ada programming language]]</text> </revision> </page> <page> <title>Anarchism</title> <id>12</id> <revision> <id>42136831</id> <timestamp>2006-03-04T01:41:25Z</timestamp> <contributor> <username>CJames745</username> <id>832382</id> </contributor><minor /> <comment>/* Anarchist Communism */  too many brackets</comment> <text xml:space='preserve'>{{Anarchism}}; '''Anarchism''' originated as a term of abuse first used against early [[working class]] [[radical]]s including the [[Diggers]] of the [[English Revolution]] an d the [[sans-culotte|''sans-culottes'']] of the [[French Revolution]].[http://uk.encarta.msn.com/encyclopedia_761568770/Anarchism.html] Whilst the term is still; used in a pejorative way to describe ''&quot;any act that used violent means to; destroy the organization of society&quot;''&lt;ref&gt;[http://www.cas.sc.edu/so; cy/faculty/deflem/zhistorintpolency.html History of International Police Coopera; tion], from the final protocols of the &quot;International Conference of Rome fo; r the Social Defense Against Anarchists&quot;, 1898&lt;/ref&gt;, it has also been taken up as a positive label by self-defined anarchists.The word '''anarchism''' is [[etymology|derived from]] the [[Greek language|Gree; k]] ''[[Wiktionary:&amp;#945;&amp;#957;&amp;#945;&amp;#961;&amp;#967;&amp;#943;& amp;#945;|&amp;#945;&amp;#957;&amp;#945;&amp;#961;&amp;#967;&amp;#943;&amp;#945;]]'' (&quot;without [[archon]]s (ruler, chief, king)&quot;). Anarchism as a [[political philosophy]], is the belief that ''rulers'' are"
-    wikicode = mwparserfromhell.parse(text2)
-    print wikicode.strip_code()
-    print wikicode
+    # text = "I has a template! {{foo|bar|baz|eggs=spam}} [[World_War_I]] See it?"
+    # text2 = r"<page> <title>AdA</title> <id>11</id> <revision> <id>15898946</id> <timestamp>2002-09-22T16:02:58Z</timestamp> <contributor> <username>Andre Engels</username> <id>300</id> </contributor> <minor /> <text xml:space='preserve'>#REDIRECT [[Ada programming language]]</text> </revision> </page> <page> <title>Anarchism</title> <id>12</id> <revision> <id>42136831</id> <timestamp>2006-03-04T01:41:25Z</timestamp> <contributor> <username>CJames745</username> <id>832382</id> </contributor><minor /> <comment>/* Anarchist Communism */  too many brackets</comment> <text xml:space='preserve'>{{Anarchism}}; '''Anarchism''' originated as a term of abuse first used against early [[working class]] [[radical]]s including the [[Diggers]] of the [[English Revolution]] an d the [[sans-culotte|''sans-culottes'']] of the [[French Revolution]].[http://uk.encarta.msn.com/encyclopedia_761568770/Anarchism.html] Whilst the term is still; used in a pejorative way to describe ''&quot;any act that used violent means to; destroy the organization of society&quot;''&lt;ref&gt;[http://www.cas.sc.edu/so; cy/faculty/deflem/zhistorintpolency.html History of International Police Coopera; tion], from the final protocols of the &quot;International Conference of Rome fo; r the Social Defense Against Anarchists&quot;, 1898&lt;/ref&gt;, it has also been taken up as a positive label by self-defined anarchists.The word '''anarchism''' is [[etymology|derived from]] the [[Greek language|Gree; k]] ''[[Wiktionary:&amp;#945;&amp;#957;&amp;#945;&amp;#961;&amp;#967;&amp;#943;& amp;#945;|&amp;#945;&amp;#957;&amp;#945;&amp;#961;&amp;#967;&amp;#943;&amp;#945;]]'' (&quot;without [[archon]]s (ruler, chief, king)&quot;). Anarchism as a [[political philosophy]], is the belief that ''rulers'' are"
+    # wikicode = mwparserfromhell.parse(text2)
+    # print wikicode.strip_code()
+    # print wikicode
+    count = 0
+    b2h = bz2.BZ2File("../../data/language/corpora/wikipedia/raw/wiki_09.bz2", mode='r')
+    for l in b2h:
+        print l
+        if "<page>" in l:
+            count += 1
+            if count % 10000 == 0:
+                print "Found %d pages" % count

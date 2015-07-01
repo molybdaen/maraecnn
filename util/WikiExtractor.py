@@ -1490,16 +1490,16 @@ def replaceInternalLinks(text):
 # the official version is a method in class Parser, similar to this:
 # def replaceInternalLinks2(text):
 #     global wgExtraInterlanguageLinkPrefixes
-
+ 
 #     # the % is needed to support urlencoded titles as well
 #     tc = Title::legalChars() + '#%'
 #     # Match a link having the form [[namespace:link|alternate]]trail
 #     e1 = re.compile("([%s]+)(?:\\|(.+?))?]](.*)" % tc, re.S | re.D)
 #     # Match cases where there is no "]]", which might still be images
 #     e1_img = re.compile("([%s]+)\\|(.*)" % tc, re.S | re.D)
-
+ 
 #     holders = LinkHolderArray(self)
-
+ 
 #     # split the entire text string on occurrences of [[
 #     iterBrackets = re.compile('[[').finditer(text)
 
@@ -1509,7 +1509,7 @@ def replaceInternalLinks(text):
 #     cur = m.end()
 
 #     line = s
-
+ 
 #     useLinkPrefixExtension = self.getTargetLanguage().linkPrefixExtension()
 #     e2 = None
 #     if useLinkPrefixExtension:
@@ -1534,7 +1534,7 @@ def replaceInternalLinks(text):
 #         prefix = ''
 
 #     useSubpages = self.areSubpagesAllowed()
-
+ 
 #     for m in iterBrackets:
 #         line = text[cur:m.start()]
 #         cur = m.end()
@@ -1552,9 +1552,9 @@ def replaceInternalLinks(text):
 #             if first_prefix:
 #                 prefix = first_prefix
 #                 first_prefix = False
-
+ 
 #         might_be_img = False
-
+ 
 #         m = e1.match(line)
 #         if m: # page with normal label or alt
 #             label = m.group(2)
@@ -1650,7 +1650,7 @@ def replaceInternalLinks(text):
 #                 # note: no trail, because without an end, there *is* no trail
 #                      continue
 #         }
-
+ 
 #         wasblank = (text == '')
 #         if wasblank:
 #             text = link
@@ -1696,7 +1696,7 @@ def replaceInternalLinks(text):
 #                 else:
 #                     s += prefix + trail
 #                 continue
-
+ 
 #             if ns == NS_CATEGORY:
 #                 s = rstrip(s + "\n") # bug 87
 
@@ -1721,7 +1721,7 @@ def replaceInternalLinks(text):
 #         if ns != NS_SPECIAL and nt.equals(self.mTitle) and !nt.hasFragment():
 #             s += prefix + Linker::makeSelfLinkObj(nt, text, '', trail)
 #                  continue
-
+ 
 #         # NS_MEDIA is a pseudo-namespace for linking directly to a file
 #         # @todo FIXME: Should do batch file existence checks, see comment below
 #         if ns == NS_MEDIA:
@@ -1799,7 +1799,7 @@ def replaceExternalLinks(text):
 
         url = m.group(1)
         label = m.group(3)
-
+ 
         # # The characters '<' and '>' (which were escaped by
         # # removeHTMLtags()) should not be included in
         # # URLs, per RFC 2396.
@@ -1807,19 +1807,19 @@ def replaceExternalLinks(text):
         # if m2:
         #     link = url[m2.end():] + ' ' + link
         #     url = url[0:m2.end()]
-
+ 
         # If the link text is an image URL, replace it with an <img> tag
         # This happened by accident in the original parser, but some people used it extensively
         m = EXT_IMAGE_REGEX.match(label)
         if m:
             label = makeExternalImage(label)
-
+ 
         # Use the encoded URL
         # This means that users can paste URLs directly into the text
         # Funny characters like Ã¶ aren't valid in URLs anyway
         # This was changed in August 2004
         s += makeExternalLink(url, label) #+ trail
-
+ 
     return s + text[cur:]
 
 # Function applied to wikiLinks
@@ -2399,7 +2399,7 @@ def main():
 
     try:
         power = 'kmg'.find(args.bytes[-1].lower()) + 1
-        file_size = int(args.bytes[:-1]) * 1024 ** power
+        file_size = int(args.bytes[:-1]) * 1024 ** power 
         if file_size < minFileSize: raise ValueError()
     except ValueError:
         logging.error('Insufficient or invalid size: %s', args.bytes)
