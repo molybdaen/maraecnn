@@ -177,6 +177,8 @@ class WikiExtractorCorpusProcessor(IProcessor):
         text = ""
         label = 0
         for line in h_raw_data:
+            if "<doc" in line or "</doc" in line:
+                continue
             if tmpTokCount > tokToRead:
                 break
             if self.exampleCount % 100000 == 0: print "Processed %d lines (%d tokens) in file." % (self.exampleCount, tmpTokCount)
@@ -234,7 +236,6 @@ class AmazonCorpusProcessor(IProcessor):
                 print "Total #examples: %d" % self.exampleCount
                 print "Total #tokens: %d" % self.tokenCount
         h_train_data.close()
-
 
     def _read(self, inputRawFile, h_train_data, tokToRead):
         h_raw_data = gzip.open(inputRawFile, mode="r")
@@ -516,7 +517,7 @@ if __name__ == "__main__":
     # pp.run()
 
     from general.tokenizer import WikiExtractorTokenizer
-    wep = WikiExtractorCorpusProcessor(WikiExtractorTokenizer(preserve_case=True))
+    wep = WikiExtractorCorpusProcessor(WikiExtractorTokenizer(preserve_case=True), 1000000000)
     wep.build()
 
 
