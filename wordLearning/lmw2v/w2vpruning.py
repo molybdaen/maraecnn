@@ -5,8 +5,11 @@ import numpy as np
 import cPickle
 from os import path
 from gensim import matutils
-import mwparserfromhell
-import bz2
+import logging
+import gzip
+from os.path import join
+from general.config import DataEnum, DataType, Config
+import codecs
 
 def getEmbeddingsAndVocab(w2vModelFilename, rebuild=False):
     if path.exists(w2vModelFilename):
@@ -23,23 +26,46 @@ def getEmbeddingsAndVocab(w2vModelFilename, rebuild=False):
         return m, v
 
 
+class LineSentence(object):
+    """Simple format: one sentence = one line; words already preprocessed and separated by whitespace."""
+    def __init__(self, filename):
+        """
+        `source` can be either a string or a file object.
+
+        Example::
+
+            sentences = LineSentence('myfile.txt')
+
+        Or for compressed files::
+
+            sentences = LineSentence('compressed_text.txt.bz2')
+            sentences = LineSentence('compressed_text.txt.gz')
+
+        """
+        self.source = codecs.open(filename, mode='r', encoding="cp1252")
+
+    def any2utf8(self, text, errors='strict', encoding='utf8'):
+        """Convert a string (unicode or bytestring in `encoding`), to bytestring in utf8."""
+        if isinstance(text, unicode):
+            return text
+        # do bytestring -> unicode -> utf8 full circle, to ensure valid utf8
+        return unicode(text, encoding, errors=errors)
+
+    def __iter__(self):
+        """Iterate through the lines in the source."""
+        for line in self.source:
+            yield line.split()#self.any2utf8(line).split()
+
+
 if __name__ == "__main__":
+    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
-    # m, v = getEmbeddingsAndVocab("../../data/language/corpora/wikientities/wikientitymodel.seq", rebuild=True)
-    # print m.shape
-    # print len(v)
-    # print np.dot(matutils.unitvec(m[v["World_War_I"].index]), matutils.unitvec(m[v["World_War_II"].index]))
+    sentences_path = join("../../data/language/corpora/wikipedia/train/train_all_data_1000000000.txt")
+    sentences = LineSentence(sentences_path)
+    model = Word2Vec(sg=1, hs=0, negative=20, min_count=100, size=100, workers=4, window=9) # an empty model, no training
+    model.build_vocab(sentences=sentences)  # can be a non-repeatable, 1-pass generator
+    model.train(sentences=LineSentence(sentences_path))  # can be a non-repeatable, 1-pass generator
+    model.save_word2vec_format("../../data/language/model/model.w2v", fvocab="../../data/language/model/vocab.w2v", binary=True)
 
-    # text = "I has a template! {{foo|bar|baz|eggs=spam}} [[World_War_I]] See it?"
-    # text2 = r"<page> <title>AdA</title> <id>11</id> <revision> <id>15898946</id> <timestamp>2002-09-22T16:02:58Z</timestamp> <contributor> <username>Andre Engels</username> <id>300</id> </contributor> <minor /> <text xml:space='preserve'>#REDIRECT [[Ada programming language]]</text> </revision> </page> <page> <title>Anarchism</title> <id>12</id> <revision> <id>42136831</id> <timestamp>2006-03-04T01:41:25Z</timestamp> <contributor> <username>CJames745</username> <id>832382</id> </contributor><minor /> <comment>/* Anarchist Communism */  too many brackets</comment> <text xml:space='preserve'>{{Anarchism}}; '''Anarchism''' originated as a term of abuse first used against early [[working class]] [[radical]]s including the [[Diggers]] of the [[English Revolution]] an d the [[sans-culotte|''sans-culottes'']] of the [[French Revolution]].[http://uk.encarta.msn.com/encyclopedia_761568770/Anarchism.html] Whilst the term is still; used in a pejorative way to describe ''&quot;any act that used violent means to; destroy the organization of society&quot;''&lt;ref&gt;[http://www.cas.sc.edu/so; cy/faculty/deflem/zhistorintpolency.html History of International Police Coopera; tion], from the final protocols of the &quot;International Conference of Rome fo; r the Social Defense Against Anarchists&quot;, 1898&lt;/ref&gt;, it has also been taken up as a positive label by self-defined anarchists.The word '''anarchism''' is [[etymology|derived from]] the [[Greek language|Gree; k]] ''[[Wiktionary:&amp;#945;&amp;#957;&amp;#945;&amp;#961;&amp;#967;&amp;#943;& amp;#945;|&amp;#945;&amp;#957;&amp;#945;&amp;#961;&amp;#967;&amp;#943;&amp;#945;]]'' (&quot;without [[archon]]s (ruler, chief, king)&quot;). Anarchism as a [[political philosophy]], is the belief that ''rulers'' are"
-    # wikicode = mwparserfromhell.parse(text2)
-    # print wikicode.strip_code()
-    # print wikicode
-    count = 0
-    b2h = bz2.BZ2File("../../data/language/corpora/wikipedia/raw/wiki_09.bz2", mode='r')
-    for l in b2h:
-        print l
-        if "<page>" in l:
-            count += 1
-            if count % 10000 == 0:
-                print "Found %d pages" % count
+    new_model = Word2Vec.load_word2vec_format("../../data/language/model/model.w2v", fvocab="../../data/language/model/vocab.w2v", binary=True)
+

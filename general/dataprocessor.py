@@ -154,7 +154,7 @@ class WikiExtractorCorpusProcessor(IProcessor):
             if f.endswith(Config.DATA_FILE_EXT_BZ2):
                 self.fileCount += 1
 
-        trainDataFilename = join(self.pathToTrain, "%s_all_data_%d.txt%s" % (Config.TRAIN_SENTENCES_PREFIX, self.maxTokens, Config.DATA_FILE_EXT_BZ2))
+        trainDataFilename = join(self.pathToTrain, "%s_all_data_%d.txt%s" % (Config.TRAIN_SENTENCES_PREFIX, self.maxTokens, Config.DATA_FILE_EXT))
         if not os.path.exists(self.pathToTrain):
             os.makedirs(self.pathToTrain)
         h_train_data = gzip.open(trainDataFilename, mode="w")
