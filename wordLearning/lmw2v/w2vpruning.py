@@ -265,35 +265,67 @@ if __name__ == "__main__":
                 sections_accs[section_names.index(section_name)].append(acc)
         return pruning_levels, section_names, sections_accs
 
-    def plotAccuracies(pruning_levels, section_names, sections_accs):
+    def plotAccuracies(size, pruning_levels, section_names, sections_accs):
         fig = plt.figure(4, figsize=(16,8))
         ax = fig.add_subplot(111, xlim=[-0.1, 1.1],ylim=[0.,1.], xlabel="Pruning Level [%]", ylabel="Accuracy [%]")
-        ax.set_title("Accuracy of Word Embeddings for all relation types")
+        ax.set_title("Accuracy of Word Embeddings for all relation types (d=%d)" % size)
         ax.grid(True)
         lineStyles, lineColors = ["-","--","-.",":"], ['b', 'g', 'r', 'c', 'm', 'y']
         for i, s in enumerate(section_names):
             lstyle = lineStyles[int(i/len(lineColors))%len(lineStyles)] + ('o' if s == "total" else '*') + lineColors[i%len(lineColors)]                                                                          #lstyle = '-o' if s == "total" else '-*'
             ax.plot(pruning_levels, sections_accs[i], lstyle, label=s)
         ax.legend(numpoints=1)
+        plt.savefig("../../data/language/model/accuracy-%d.pdf" % size, format='pdf')
         plt.show()
 
-    logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-    sentences_path = join("../../data/language/corpora/wikipedia/train/train_all_data_1000000000.txt")
+    def plotAccuraciesPerRelation(results):
+        relations = results[0]['section_names']
+        for i, r in enumerate(relations):
+            pruning_levels = []
+            accuracies = []
+            sizes = []
+            for result in results:
+                pruning_levels = result['pruning_levels']
+                accuracies.append(result['sections_accs'][i])
+                sizes.append(result['size'])
 
-    sizes = [30, 40, 50, 60, 70, 80, 90, 100, 150, 200, 300, 500]
+            fig = plt.figure(i, figsize=(16,8))
+            ax = fig.add_subplot(111, xlim=[-0.1, 1.1],ylim=[0.,1.], xlabel="Pruning Level [%]", ylabel="Accuracy [%]")
+            ax.set_title("Accuracy of Word Embeddings (Relation: %s)" % r)
+            ax.grid(True)
+            lineStyles, lineColors = ["-","--","-.",":"], ['b', 'g', 'r', 'c', 'm', 'y']
+            for i, s in enumerate(sizes):
+                lstyle = lineStyles[int(i/len(lineColors))%len(lineStyles)] + ('o' if r == "total" else '*') + lineColors[i%len(lineColors)]                                                                          #lstyle = '-o' if s == "total" else '-*'
+                ax.plot(pruning_levels, accuracies[i], lstyle, label="d = %d" % s)
+            ax.legend(numpoints=1)
+            fig.savefig("../../data/language/model/accuracy-%s.pdf" % r, format='pdf')
 
+
+    #logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+    #sentences_path = join("../../data/language/corpora/wikipedia/train/train_all_data_1000000000.txt")
+
+    sizes = [40, 50, 60, 70, 80, 90, 100, 150, 200, 300, 500]
+
+    # for size in sizes:
+    #     sentences = LineSentence(sentences_path)
+    #     model = Word2Vec(sg=1, hs=0, negative=20, min_count=100, size=size, workers=4, window=9) # an empty model, no training
+    #     model.build_vocab(sentences=sentences)  # can be a non-repeatable, 1-pass generator
+    #     model.train(sentences=LineSentence(sentences_path))  # can be a non-repeatable, 1-pass generator
+    #     model.save_word2vec_format("../../data/language/model/model-%d.w2v" % size, fvocab="../../data/language/model/vocab-%d.w2v" % size, binary=True)
+    #
+    #     model = Word2Vec.load_word2vec_format("../../data/language/model/model-%d.w2v" % size, fvocab="../../data/language/model/vocab-%d.w2v" % size, binary=True, norm_only=False)
+    #     emb = model.syn0
+    #     vocab = model.vocab
+    #
+    #     wordAccuracy, results = computeAccuracy(model, logger)
+    #     pruning_levels, section_names, sections_accs = cleanAccuracy(results)
+    #     result = {'size': size, 'pruning_levels': pruning_levels, 'section_names': section_names, 'sections_accs': sections_accs}
+    #     cPickle.dump(result, open("../../data/language/model/result-%d.pkl" % size, 'wb'))
+
+    results = []
     for size in sizes:
-        sentences = LineSentence(sentences_path)
-        model = Word2Vec(sg=1, hs=0, negative=20, min_count=100, size=size, workers=4, window=9) # an empty model, no training
-        model.build_vocab(sentences=sentences)  # can be a non-repeatable, 1-pass generator
-        model.train(sentences=LineSentence(sentences_path))  # can be a non-repeatable, 1-pass generator
-        model.save_word2vec_format("../../data/language/model/model-%d.w2v" % size, fvocab="../../data/language/model/vocab-%d.w2v" % size, binary=True)
+        result = cPickle.load(open("../../data/language/model/result-%d.pkl" % size, 'rb'))
+        results.append(result)
+        plotAccuracies(size, result['pruning_levels'], result['section_names'], result['sections_accs'])
 
-        model = Word2Vec.load_word2vec_format("../../data/language/model/model-%d.w2v" % size, fvocab="../../data/language/model/vocab-%d.w2v" % size, binary=True, norm_only=False)
-        emb = model.syn0
-        vocab = model.vocab
-
-        wordAccuracy, results = computeAccuracy(model, logger)
-        pruning_levels, section_names, sections_accs = cleanAccuracy(results)
-        result = {'size': size, 'pruning_levels': pruning_levels, 'section_names': section_names, 'sections_accs': sections_accs}
-        cPickle.dump(result, open("../../data/language/model/result-%d.pkl" % size, 'wb'))
+    plotAccuraciesPerRelation(results)
